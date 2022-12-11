@@ -34,10 +34,7 @@ async def get_motd(db: aiosqlite.Connection) -> str:
     query = 'SELECT msg FROM motd ORDER BY ROWID DESC LIMIT 1'
     async with db.execute(query) as cursor:
         row = await cursor.fetchone()
-        if row is None:
-            return 'nothing???'
-        else:
-            return esc(row[0])
+        return 'nothing???' if row is None else esc(row[0])
 
 
 async def msg_count(db: aiosqlite.Connection, msg: str) -> int:

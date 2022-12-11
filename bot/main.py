@@ -103,10 +103,9 @@ async def connect(
             if not data:
                 if writer.is_closing():
                     return
-                else:
-                    print('!!!reconnect!!!')
-                    reader, writer = await _new_conn()
-                    continue
+                print('!!!reconnect!!!')
+                reader, writer = await _new_conn()
+                continue
 
             yield data
 
@@ -136,8 +135,7 @@ class LogWriter:
 
 
 def get_printed_output(config: Config, res: str) -> str | None:
-    send_match = SEND_MSG_RE.match(res)
-    if send_match:
+    if send_match := SEND_MSG_RE.match(res):
         color = '\033[1m\033[3m\033[38;5;21m'
         return (
             f'{dt_str()}'
@@ -204,64 +202,62 @@ async def get_printed_input(
         *,
         images: bool,
 ) -> tuple[str, str] | None:
-    parsed = Message.parse(msg)
-    if parsed:
-        r, g, b = parsed.color
-        color_start = f'\033[1m\033[38;2;{r};{g};{b}m'
+    if not (parsed := Message.parse(msg)):
+        return None
+    r, g, b = parsed.color
+    color_start = f'\033[1m\033[38;2;{r};{g};{b}m'
 
-        badges_s = badges_plain_text(parsed.badges)
-        if images:
-            # TODO: maybe combine into `Message`?
-            badges = parse_badges(parsed.info['badges'])
-            await download_all_badges(
-                parse_badges(parsed.info['badges']),
-                channel=config.channel,
-                oauth_token=config.oauth_token_token,
-                client_id=config.client_id,
-            )
-            badges_s_images = badges_images(badges)
-        else:
-            badges_s_images = badges_s
+    badges_s = badges_plain_text(parsed.badges)
+    if images:
+        # TODO: maybe combine into `Message`?
+        badges = parse_badges(parsed.info['badges'])
+        await download_all_badges(
+            parse_badges(parsed.info['badges']),
+            channel=config.channel,
+            oauth_token=config.oauth_token_token,
+            client_id=config.client_id,
+        )
+        badges_s_images = badges_images(badges)
+    else:
+        badges_s_images = badges_s
 
-        if images:
-            msg_parsed = await parse_message_parts(
-                msg=parsed,
-                channel=config.channel,
-                oauth_token=config.oauth_token_token,
-                client_id=config.client_id,
-            )
-            msg_s_images = await parsed_to_terminology(msg_parsed)
-        else:
-            msg_s_images = parsed.msg
+    if images:
+        msg_parsed = await parse_message_parts(
+            msg=parsed,
+            channel=config.channel,
+            oauth_token=config.oauth_token_token,
+            client_id=config.client_id,
+        )
+        msg_s_images = await parsed_to_terminology(msg_parsed)
+    else:
+        msg_s_images = parsed.msg
 
-        if parsed.is_me:
-            fmt = (
-                f'{dt_str()}'
-                f'{{badges}}'
-                f'{color_start}\033[3m * {parsed.display_name}\033[22m '
-                f'{{msg}}\033[m'
-            )
-        elif parsed.bg_color is not None:
-            bg_color_s = '{};{};{}'.format(*parsed.bg_color)
-            fmt = (
-                f'{dt_str()}'
-                f'{{badges}}'
-                f'<{color_start}{parsed.display_name}\033[m> '
-                f'\033[48;2;{bg_color_s}m{{msg}}\033[m'
-            )
-        else:
-            fmt = (
-                f'{dt_str()}'
-                f'{{badges}}'
-                f'<{color_start}{parsed.display_name}\033[m> '
-                f'{{msg}}'
-            )
+    if parsed.is_me:
+        fmt = (
+            f'{dt_str()}'
+            f'{{badges}}'
+            f'{color_start}\033[3m * {parsed.display_name}\033[22m '
+            f'{{msg}}\033[m'
+        )
+    elif parsed.bg_color is not None:
+        bg_color_s = '{};{};{}'.format(*parsed.bg_color)
+        fmt = (
+            f'{dt_str()}'
+            f'{{badges}}'
+            f'<{color_start}{parsed.display_name}\033[m> '
+            f'\033[48;2;{bg_color_s}m{{msg}}\033[m'
+        )
+    else:
+        fmt = (
+            f'{dt_str()}'
+            f'{{badges}}'
+            f'<{color_start}{parsed.display_name}\033[m> '
+            f'{{msg}}'
+        )
 
-        to_print = fmt.format(badges=badges_s_images, msg=msg_s_images)
-        to_log = fmt.format(badges=badges_s, msg=parsed.msg)
-        return to_print, to_log
-
-    return None
+    to_print = fmt.format(badges=badges_s_images, msg=msg_s_images)
+    to_log = fmt.format(badges=badges_s, msg=parsed.msg)
+    return to_print, to_log
 
 
 async def amain(config: Config, *, quiet: bool, images: bool) -> None:

@@ -90,9 +90,8 @@ async def get_enabled(db: aiosqlite.Connection) -> bool:
         ret = await cursor.fetchone()
         if ret is None:
             return True
-        else:
-            enabled, = ret
-            return bool(enabled)
+        enabled, = ret
+        return bool(enabled)
 
 
 async def get_time_left(db: aiosqlite.Connection) -> int:
@@ -104,12 +103,12 @@ async def get_time_left(db: aiosqlite.Connection) -> int:
         ret = await cursor.fetchone()
         if ret is None:
             return 0
-        else:
-            dt = datetime.datetime.fromisoformat(ret[0])
-            if dt < datetime.datetime.now():
-                return 0
-            else:
-                return (dt - datetime.datetime.now()).seconds
+        dt = datetime.datetime.fromisoformat(ret[0])
+        return (
+            0
+            if dt < datetime.datetime.now()
+            else (dt - datetime.datetime.now()).seconds
+        )
 
 
 def _bits_to_seconds(bits: int) -> int:
@@ -161,19 +160,18 @@ async def vim_bits_handler(config: Config, msg: Message) -> str:
         else:
             time_left = await add_bits_off(db, msg.name_key, bits)
 
-    if enabled:
-        await _set_symlink(should_be_vim=True)
-
-        return format_msg(
-            msg,
-            f'MOAR VIM: {seconds_to_readable(time_left)} remaining',
-        )
-    else:
+    if not enabled:
         return format_msg(
             msg,
             f'vim is currently disabled '
             f'{seconds_to_readable(time_left)} banked',
         )
+    await _set_symlink(should_be_vim=True)
+
+    return format_msg(
+        msg,
+        f'MOAR VIM: {seconds_to_readable(time_left)} remaining',
+    )
 
 
 async def _get_user_vim_bits(
@@ -182,8 +180,7 @@ async def _get_user_vim_bits(
     vim_bits_query = 'SELECT user, SUM(bits) FROM vim_bits GROUP BY user'
     async with db.execute(vim_bits_query) as cursor:
         rows = await cursor.fetchall()
-        bits_counts = collections.Counter(dict(rows))
-        return bits_counts
+        return collections.Counter(dict(rows))
 
 
 async def _user_rank_by_bits(
@@ -195,8 +192,7 @@ async def _user_rank_by_bits(
         for username, _ in users:
             if target_username == username.lower():
                 return rank, count
-    else:
-        return None
+    return None
 
 
 async def _top_n_rank_by_bits(
@@ -226,12 +222,11 @@ async def cmd_vimbitsrank(config: Config, msg: Message) -> str:
         ret = await _user_rank_by_bits(user, db)
         if ret is None:
             return format_msg(msg, f'user not found {esc(user)}')
-        else:
-            rank, n = ret
-            return format_msg(
-                msg,
-                f'{esc(user)} is ranked #{rank} with {n} vim bits',
-            )
+        rank, n = ret
+        return format_msg(
+            msg,
+            f'{esc(user)} is ranked #{rank} with {n} vim bits',
+        )
 
 
 @command('!vimtimeleft', secret=True)
@@ -282,13 +277,12 @@ async def cmd_enablevim(config: Config, msg: Message) -> str:
 
     if time_left == 0:
         return format_msg(msg, 'vim has been enabled')
-    else:
-        await _set_symlink(should_be_vim=True)
-        return format_msg(
-            msg,
-            f'vim has been enabled: '
-            f'time remaining {seconds_to_readable(time_left)}',
-        )
+    await _set_symlink(should_be_vim=True)
+    return format_msg(
+        msg,
+        f'vim has been enabled: '
+        f'time remaining {seconds_to_readable(time_left)}',
+    )
 
 
 @command(
@@ -322,7 +316,4 @@ async def vim_normalize_state(config: Config, msg: Message) -> str | None:
         time_left = await get_time_left(db)
 
     cleared_vim = await _set_symlink(should_be_vim=time_left > 0)
-    if cleared_vim:
-        return format_msg(msg, 'vim no more! you are free!')
-    else:
-        return None
+    return format_msg(msg, 'vim no more! you are free!') if cleared_vim else None

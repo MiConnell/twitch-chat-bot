@@ -105,8 +105,7 @@ def periodic_handler(*, seconds: int) -> Callable[[Callback], Callback]:
 
 
 def get_handler(msg: str) -> tuple[Callback, Message] | None:
-    parsed = Message.parse(msg)
-    if parsed:
+    if parsed := Message.parse(msg):
         if 'custom-reward-id' in parsed.info:
             if parsed.info['custom-reward-id'] in POINTS_HANDLERS:
                 return POINTS_HANDLERS[parsed.info['custom-reward-id']], parsed
@@ -118,15 +117,13 @@ def get_handler(msg: str) -> tuple[Callback, Message] | None:
             if bits_n % 100 in BITS_HANDLERS:
                 return BITS_HANDLERS[bits_n % 100], parsed
 
-        cmd_match = COMMAND_RE.match(parsed.msg)
-        if cmd_match:
+        if cmd_match := COMMAND_RE.match(parsed.msg):
             command = f'!{cmd_match["cmd"].lstrip("!").lower()}'
             if command in COMMANDS:
                 return COMMANDS[command], parsed
 
         for pattern, handler in MSG_HANDLERS:
-            match = pattern.match(parsed.msg)
-            if match:
+            if match := pattern.match(parsed.msg):
                 return handler, parsed
 
     return None
@@ -153,8 +150,7 @@ async def cmd_help(config: Config, msg: Message) -> str:
         msg_s = f' possible commands: {", ".join(commands)}'
     else:
         msg_s = f'unknown command ({esc(cmd)}).'
-        suggestions = difflib.get_close_matches(cmd, commands, cutoff=0.7)
-        if suggestions:
+        if suggestions := difflib.get_close_matches(cmd, commands, cutoff=0.7):
             msg_s += f' did you mean: {", ".join(suggestions)}?'
         else:
             msg_s += f' possible commands: {", ".join(commands)}'

@@ -44,8 +44,7 @@ async def _fetch_playlist(
             async with session.get(url, params=params) as resp:
                 json_resp = await resp.json()
                 playlist_videos.extend(json_resp['items'])
-                next_page_token = json_resp.get('nextPageToken')
-                if next_page_token:
+                if next_page_token := json_resp.get('nextPageToken'):
                     params['pageToken'] = next_page_token
                 else:
                     more_pages = False
@@ -107,11 +106,7 @@ async def _msg(config: Config, playlist_name: str, search_terms: str) -> str:
     playlist_url = f'https://www.youtube.com/playlist?list={playlist_id}'
     if not search_terms:
         msg = f'playlist: {playlist_url}'
-        if info.get('github'):
-            return f'{msg} video list: {info["github"]}'
-        else:
-            return msg
-
+        return f'{msg} video list: {info["github"]}' if info.get('github') else msg
     await _populate_playlist(playlist_id, api_key=config.youtube_api_key)
 
     async with aiosqlite.connect('db.db') as db:

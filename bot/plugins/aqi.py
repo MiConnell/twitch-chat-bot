@@ -33,13 +33,9 @@ async def cmd_aqi(config: Config, msg: Message) -> str:
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as resp:
             json_resp = await resp.json()
-            pm_25 = [d for d in json_resp if d['ParameterName'] == 'PM2.5']
-            if not pm_25:
-                return format_msg(
-                    msg,
-                    'No PM2.5 info -- is this a US zip code?',
-                )
-            else:
+            if pm_25 := [
+                d for d in json_resp if d['ParameterName'] == 'PM2.5'
+            ]:
                 data, = pm_25
                 return format_msg(
                     msg,
@@ -48,4 +44,9 @@ async def cmd_aqi(config: Config, msg: Message) -> str:
                     f'{esc(data["StateCode"])}: '
                     f'{esc(str(data["AQI"]))} '
                     f'({esc(data["Category"]["Name"])})',
+                )
+            else:
+                return format_msg(
+                    msg,
+                    'No PM2.5 info -- is this a US zip code?',
                 )

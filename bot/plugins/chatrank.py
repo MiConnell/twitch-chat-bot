@@ -77,8 +77,7 @@ def _user_rank_by_line_type(
         for username, _ in users:
             if target_username == username:
                 return rank, count
-    else:
-        return None
+    return None
 
 
 def _top_n_rank_by_line_type(reg: Pattern[str], n: int = 10) -> list[str]:
@@ -104,13 +103,12 @@ async def cmd_chatrank(config: Config, msg: Message) -> str:
     ret = _user_rank_by_line_type(user, CHAT_LOG_RE)
     if ret is None:
         return format_msg(msg, f'user not found {esc(user)}')
-    else:
-        rank, n = ret
-        return format_msg(
-            msg,
-            f'{esc(user)} is ranked #{rank} with {n} messages '
-            f'(since {_log_start_date()})',
-        )
+    rank, n = ret
+    return format_msg(
+        msg,
+        f'{esc(user)} is ranked #{rank} with {n} messages '
+        f'(since {_log_start_date()})',
+    )
 
 
 @command('!top10chat')
@@ -126,12 +124,11 @@ async def cmd_bonkrank(config: Config, msg: Message) -> str:
     ret = _user_rank_by_line_type(user, BONKER_RE)
     if ret is None:
         return format_msg(msg, f'user not found {esc(user)}')
-    else:
-        rank, n = ret
-        return format_msg(
-            msg,
-            f'{esc(user)} is ranked #{rank}, has bonked others {n} times',
-        )
+    rank, n = ret
+    return format_msg(
+        msg,
+        f'{esc(user)} is ranked #{rank}, has bonked others {n} times',
+    )
 
 
 @command('!top5bonkers', secret=True)
@@ -147,12 +144,11 @@ async def cmd_bonkedrank(config: Config, msg: Message) -> str:
     ret = _user_rank_by_line_type(user, BONKED_RE)
     if ret is None:
         return format_msg(msg, f'user not found {esc(user)}')
-    else:
-        rank, n = ret
-        return format_msg(
-            msg,
-            f'{esc(user)} is ranked #{rank}, has been bonked {n} times',
-        )
+    rank, n = ret
+    return format_msg(
+        msg,
+        f'{esc(user)} is ranked #{rank}, has been bonked {n} times',
+    )
 
 
 @command('!top5bonked', secret=True)
@@ -242,9 +238,7 @@ async def cmd_chatplot(config: Config, msg: Message) -> str:
                 },
             ],
         }
-        datasets.append(point_data)
-        datasets.append(trend_data)
-
+        datasets.extend((point_data, trend_data))
     # generate title checking if we are comparing users
     if len(user_list) > 1:
         title_user = "'s, ".join(user_list)

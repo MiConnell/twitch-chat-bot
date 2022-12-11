@@ -63,8 +63,12 @@ async def parse_message_parts(
     parts: list[str | Emote | Cheer] = []
     pos = 0
     for emote in emotes:
-        parts.append(msg.msg[pos:emote.start])
-        parts.append(Emote(url=emote.download_url, original=emote.emote))
+        parts.extend(
+            (
+                msg.msg[pos : emote.start],
+                Emote(url=emote.download_url, original=emote.emote),
+            )
+        )
         pos = emote.end + 1
     parts.append(msg.msg[pos:])
 

@@ -33,8 +33,7 @@ async def msg_gnu_please(config: Config, msg: Message) -> str | None:
     match = GNU_RE.match(msg.msg)
     assert match is not None
     word = match['word']
-    query = re.search(f'gnu[/+]{word}', msg.msg, flags=re.IGNORECASE)
-    if query:
+    if query := re.search(f'gnu[/+]{word}', msg.msg, flags=re.IGNORECASE):
         return format_msg(msg, f'YES! {query[0]}')
     else:
         return format_msg(msg, f"Um please, it's GNU+{esc(word)}!")

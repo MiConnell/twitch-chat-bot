@@ -9,10 +9,7 @@ from typing import IO
 
 
 def get_quantified_unit(unit: str, amount: int) -> str:
-    if amount == 1:
-        return unit
-    else:
-        return f'{unit}s'
+    return unit if amount == 1 else f'{unit}s'
 
 
 def seconds_to_readable(seconds: int) -> str:

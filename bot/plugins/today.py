@@ -30,10 +30,7 @@ async def get_today(db: aiosqlite.Connection) -> str:
     query = 'SELECT msg FROM today ORDER BY ROWID DESC LIMIT 1'
     async with db.execute(query) as cursor:
         row = await cursor.fetchone()
-        if row is None:
-            return 'not working on anything?'
-        else:
-            return esc(row[0])
+        return 'not working on anything?' if row is None else esc(row[0])
 
 
 @command('!today', '!project')

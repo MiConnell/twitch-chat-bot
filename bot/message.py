@@ -66,10 +66,7 @@ class Message(NamedTuple):
     @property
     def optional_user_arg(self) -> str:
         _, _, rest = self.msg.strip().partition(' ')
-        if rest:
-            return rest.lstrip('@')
-        else:
-            return self.display_name
+        return rest.lstrip('@') if rest else self.display_name
 
     @property
     def is_moderator(self) -> bool:
@@ -83,22 +80,17 @@ class Message(NamedTuple):
     @classmethod
     def parse(cls, msg: str) -> Message | None:
         match = MSG_RE.match(msg)
-        if match is not None:
-            is_me = match['msg'].startswith(ME_PREFIX)
-            if is_me:
-                msg = match['msg'][len(ME_PREFIX):]
-            else:
-                msg = match['msg']
-
-            info = {}
-            for part in match['info'].split(';'):
-                k, v = part.split('=', 1)
-                info[k] = v
-            return cls(
-                msg=msg,
-                is_me=is_me,
-                channel=match['channel'],
-                info=info,
-            )
-        else:
+        if match is None:
             return None
+        is_me = match['msg'].startswith(ME_PREFIX)
+        msg = match['msg'][len(ME_PREFIX):] if is_me else match['msg']
+        info = {}
+        for part in match['info'].split(';'):
+            k, v = part.split('=', 1)
+            info[k] = v
+        return cls(
+            msg=msg,
+            is_me=is_me,
+            channel=match['channel'],
+            info=info,
+        )

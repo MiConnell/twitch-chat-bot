@@ -21,8 +21,7 @@ async def fetch_twitch_user(
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as resp:
             json_resp = await resp.json()
-            users = json_resp.get('data')
-            if users:
+            if users := json_resp.get('data'):
                 user, = users
                 return user
             else:

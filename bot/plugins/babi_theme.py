@@ -41,8 +41,7 @@ def _remove_comments(s: bytes) -> io.BytesIO:
     in_string = False
     in_comment = False
 
-    match = COMMENT_TOKEN.search(s, idx)
-    while match:
+    while match := COMMENT_TOKEN.search(s, idx):
         if not in_comment:
             bio.write(s[idx:match.start()])
 
@@ -58,7 +57,6 @@ def _remove_comments(s: bytes) -> io.BytesIO:
             bio.write(tok)
 
         idx = match.end()
-        match = COMMENT_TOKEN.search(s, idx)
     bio.write(s[idx:])
 
     return bio
@@ -70,25 +68,17 @@ def _remove_trailing_commas(s: bytes) -> io.BytesIO:
     idx = 0
     in_string = False
 
-    match = COMMA_TOKEN.search(s, idx)
-    while match:
+    while match := COMMA_TOKEN.search(s, idx):
         tok = match[0]
         if tok == b'"':
             in_string = not in_string
             bio.write(s[idx:match.start()])
-            bio.write(tok)
-        elif in_string:
+        elif in_string or tok not in b']}':
             bio.write(s[idx:match.start()])
-            bio.write(tok)
-        elif tok in b']}':
-            bio.write(TRAILING_COMMA.sub(br'\1', s[idx:match.start()]))
-            bio.write(tok)
         else:
-            bio.write(s[idx:match.start()])
-            bio.write(tok)
-
+            bio.write(TRAILING_COMMA.sub(br'\1', s[idx:match.start()]))
+        bio.write(tok)
         idx = match.end()
-        match = COMMA_TOKEN.search(s, idx)
     bio.write(s[idx:])
 
     return bio
